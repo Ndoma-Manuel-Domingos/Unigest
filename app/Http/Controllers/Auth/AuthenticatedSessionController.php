@@ -22,15 +22,41 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+
+        // Super Administrador da plataforma
+        if ($user->hasRole('Super Admin')) {
+            return redirect()->route('platform.universities.index');
+        }
+
+        // Administrador da universidade
+        if ($user->hasRole('Administrador da Universidade')) {
+            return redirect()->route('university.dashboard');
+        }
+
+        // Restantes utilizadores da universidade
+        if ($user->tenant_id) {
+            return redirect()->route('university.dashboard');
+        }
+
+        // Utilizador sem perfil ou universidade associados
+        auth()->logout();
+
+        return redirect()
+            ->route('login')
+            ->withErrors([
+                'email' => 'A sua conta não possui um perfil ou universidade associados.',
+            ]);
     }
 
+        
     /**
      * Destroy an authenticated session.
      */

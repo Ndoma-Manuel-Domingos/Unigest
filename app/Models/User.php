@@ -10,8 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\University;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'tenant_id', 'is_active', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,4 +33,26 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class, 'tenant_id');
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin');
+    }
+
+    public function createdInvoices()
+    {
+        return $this->hasMany(Invoice::class, 'created_by');
+    }
+
+    public function receivedPayments()
+    {
+        return $this->hasMany(Payment::class, 'received_by');
+    }
+
+
 }
