@@ -136,7 +136,7 @@
                                 </td>
 
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
-                                    {{ $invoice->issue_date?->format('d/m/Y') ?? '—' }}
+                                    {{ $invoice->created_at?->format('d/m/Y') ?? '—' }}
                                 </td>
 
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600">

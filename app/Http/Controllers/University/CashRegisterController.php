@@ -21,7 +21,7 @@ class CashRegisterController extends Controller
             })
             ->when($request->filled('operator'), function ($query) use ($request) {
                 $query->whereHas('user', function ($userQuery) use ($request) {
-                    $userQuery->where('name', 'LIKE', '%' . $request->operator . '%');
+                    $userQuery->where('name', 'ILIKE', '%' . $request->operator . '%');
                 });
             })
             ->latest('opened_at')

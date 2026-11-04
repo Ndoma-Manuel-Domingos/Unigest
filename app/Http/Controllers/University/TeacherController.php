@@ -17,20 +17,20 @@ class TeacherController extends Controller
                     $search = $request->search;
 
                     $query->where(function ($q) use ($search) {
-                        $q->where('name', 'LIKE', "%{$search}%")
+                        $q->where('name', 'ILIKE', "%{$search}%")
                             ->orWhere(
                                 'teacher_number',
-                                'LIKE',
+                                'ILIKE',
                                 "%{$search}%"
                             )
                             ->orWhere(
                                 'employee_number',
-                                'LIKE',
+                                'ILIKE',
                                 "%{$search}%"
                             )
                             ->orWhere(
                                 'email',
-                                'LIKE',
+                                'ILIKE',
                                 "%{$search}%"
                             );
                     });
@@ -114,7 +114,7 @@ class TeacherController extends Controller
         $year = now()->format('Y');
 
         $last = Teacher::query()
-            ->where('teacher_number', 'like', "DOC-{$year}-%")
+            ->where('teacher_number', 'ILIKE', "DOC-{$year}-%")
             ->lockForUpdate()
             ->orderByDesc('id')
             ->first();

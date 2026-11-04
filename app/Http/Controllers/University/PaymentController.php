@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+use App\Services\Finance\FinancialAuditService;
+
 class PaymentController extends Controller
 {
     public function index(Request $request)
@@ -21,13 +23,13 @@ class PaymentController extends Controller
                 $search = $request->search;
 
                 $query->where(function ($q) use ($search) {
-                    $q->where('payment_number', 'LIKE', "%{$search}%")
-                        ->orWhere('transaction_reference', 'LIKE', "%{$search}%")
+                    $q->where('payment_number', 'ILIKE', "%{$search}%")
+                        ->orWhere('transaction_reference', 'ILIKE', "%{$search}%")
                         ->orWhereHas('invoice', function ($invoice) use ($search) {
-                            $invoice->where('invoice_number', 'LIKE', "%{$search}%")
+                            $invoice->where('invoice_number', 'ILIKE', "%{$search}%")
                                 ->orWhereHas('student', function ($student) use ($search) {
-                                    $student->where('name', 'LIKE', "%{$search}%")
-                                        ->orWhere('student_number', 'LIKE', "%{$search}%");
+                                    $student->where('name', 'ILIKE', "%{$search}%")
+                                        ->orWhere('student_number', 'ILIKE', "%{$search}%");
                                 });
                         });
                 });
@@ -65,7 +67,7 @@ class PaymentController extends Controller
         return view('university.finance.payments.create', compact('invoice'));
     }
 
-    public function store(Request $request, string $invoice)
+    public function store(Request $request, string $invoice, FinancialAuditService $audit)
     {
         $invoice = Invoice::findOrFail($invoice); 
 
@@ -80,7 +82,7 @@ class PaymentController extends Controller
             'observations' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $payment = DB::transaction(function () use ($invoice, $data) {
+        $payment = DB::transaction(function () use ($invoice, $data, $audit) {
             $lockedInvoice = Invoice::whereKey($invoice->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -106,12 +108,12 @@ class PaymentController extends Controller
 
             $prefix = 'REC-' . now()->format('Y') . '-';
 
-            $number = Payment::where('payment_number', 'LIKE', $prefix . '%')
+            $number = Payment::where('payment_number', 'ILIKE', $prefix . '%')
                 ->count() + 1;
 
             $paymentNumber = $prefix . str_pad($number, 6, '0', STR_PAD_LEFT);
 
-            return Payment::create([
+            $payment = Payment::create([
                 'invoice_id' => $lockedInvoice->id,
                 'payment_number' => $paymentNumber,
                 'payment_date' => $data['payment_date'],
@@ -123,6 +125,22 @@ class PaymentController extends Controller
                 'observations' => $data['observations'] ?? null,
                 'received_by' => auth()->id(),
             ]);
+
+            $audit->record(
+                module: 'payments',
+                event: 'payment.created',
+                description: 'Foi registado um pagamento de factura.',
+                record: $payment,
+                newValues: [
+                    'invoice_id' => $payment->invoice_id,
+                    'amount' => $payment->amount,
+                    'currency' => $payment->currency,
+                    'payment_method' => $payment->payment_method,
+                    'status' => $payment->status,
+                ]
+            );
+
+            return $payment;
         });
 
         return redirect()

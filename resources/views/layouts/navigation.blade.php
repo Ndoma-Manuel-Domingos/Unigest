@@ -163,6 +163,8 @@
                     auth()->user()->can('finance.fee-concepts.view') ||
                     auth()->user()->can('finance.fee-tariffs.view') ||
                     auth()->user()->can('finance.invoices.view') ||
+                    auth()->user()->can('finance.bank-accounts.view') ||
+                    auth()->user()->can('finance.bank-movements.view') ||
                     auth()->user()->can('finance.payments.view')
                     )
 
@@ -206,8 +208,6 @@
                             </x-dropdown-link>
                             @endcan
 
-
-
                             @can('finance.suppliers.view')
                             <x-dropdown-link :href="route('university.suppliers.index')" :active="request()->routeIs('university.suppliers.*')">
                                 <i class="fas fa-cash-register me-2"></i>
@@ -236,6 +236,59 @@
                             </x-dropdown-link>
                             @endcan
 
+
+
+                            {{-- Contas bancárias --}}
+                            @can('finance.bank-accounts.view')
+                            <x-dropdown-link :href="route('university.bank-accounts.index')" :active="request()->routeIs('university.bank-accounts.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Contas Bancárias
+                            </x-dropdown-link>
+                            @endcan
+
+                            {{-- Movimentos Bancários --}}
+                            @can('finance.bank-movements.view')
+                            <x-dropdown-link :href="route('university.bank-movements.index')" :active="request()->routeIs('university.bank-movements.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Movimentos Bancários
+                            </x-dropdown-link>
+                            @endcan
+                            {{-- Nova transferência --}}
+                            @can('finance.bank-movements.view')
+                            <x-dropdown-link :href="route('university.bank-movements.transfer.create')" :active="request()->routeIs('university.bank-movements.transfer.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Transferência Bancária
+                            </x-dropdown-link>
+                            @endcan
+                            {{-- Nova transferência --}}
+                            @can('finance.bank-reconciliations.view')
+                            <x-dropdown-link :href="route('university.bank-reconciliations.index')" :active="request()->routeIs('university.bank-reconciliations.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Reconciliação Bancária
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.bank-transactions.view')
+                            <x-dropdown-link :href="route('university.bank-api-transactions.index')" :active="request()->routeIs('university.bank-api-transactions.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Transacções Bancárias
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.bank-reports.view')
+                            <x-dropdown-link :href="route('university.bank-reports.index')" :active="request()->routeIs('universitybank-reports.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Relatórios Bancários
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.bank-integrations.view')
+                            <x-dropdown-link :href="route('university.bank-integrations.index')" :active="request()->routeIs('university.bank-integrations.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Integrações Bancárias
+                            </x-dropdown-link>
+                            @endcan
+
                         </x-slot>
                     </x-dropdown>
 
@@ -246,7 +299,9 @@
                     {{-- TESOURARIA E CAIXA --}}
                     {{-- ================================================= --}}
 
-                    @can('finance.cash.view')
+                    @can([
+                    'finance.cash.view', 'finance.treasury.view'
+                    ])
 
                     <x-dropdown align="left" width="72">
 
@@ -260,10 +315,145 @@
 
                         <x-slot name="content">
 
+                            @can('finance.cash.view')
                             <x-dropdown-link :href="route('university.cash.index')">
                                 <i class="fas fa-cash-register me-2"></i>
-                                Caixa e Tesouraria
+                                Caixa
                             </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.view')
+                            <x-dropdown-link :href="route('university.treasury.dashboard')" :active="request()->routeIs('university.treasury.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Tesouraria
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.movements.view')
+                            <x-dropdown-link :href="route('university.treasury.movements.index')" :active="request()->routeIs('university.treasury.movements.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Livro de Movimentos
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.closures.view')
+                            <x-dropdown-link :href="route('university.treasury.daily-closures.index')" :active="request()->routeIs('university.treasury.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Fechos Diários
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.view')
+                            <x-dropdown-link :href="route('university.treasury.operations.index')" :active="request()->routeIs('university.treasury.operations.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Operações da Tesouraria
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.position.view')
+                            <x-dropdown-link :href="route('university.treasury.position.index')" :active="request()->routeIs('university.treasury.position.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Posição Financeira
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.cash-flow.view')
+                            <x-dropdown-link :href="route('university.treasury.reports.cash-flow')" :active="request()->routeIs('university.treasury.reports.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Recebimentos e Pagamentos
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.operators.view')
+                            <x-dropdown-link :href="route('university.treasury.operators.index')" :active="request()->routeIs('university.treasury.operators.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Controlo por Operador
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.transfers.view')
+                            <x-dropdown-link :href="route('university.treasury.transfers.index')" :active="request()->routeIs('university.treasury.transfers.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Transferências entre Caixas
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.cash-counts.view')
+                            <x-dropdown-link :href="route('university.treasury.cash-counts.index')" :active="request()->routeIs('university.treasury.cash-counts.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Contagem Física de Caixa
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.petty-cash.funds.view')
+                            <x-dropdown-link :href="route('university.petty-cash.funds.index')" :active="request()->routeIs('university.petty-cash.funds.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Caixa Pequena
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.petty-cash.replenishments.view')
+                            <x-dropdown-link :href="route('university.petty-cash.replenishments.index')" :active="request()->routeIs('university.petty-cash.replenishments.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Reposições de fundos
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.petty-cash.reports.view')
+                            <x-dropdown-link :href="route('university.petty-cash.reports.index')" :active="request()->routeIs('university.petty-cash.reports.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Relatórios da Caixa Pequena
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('finance.treasury.reports.view')
+                            <x-dropdown-link :href="route('university.treasury.reports.daily')" :active="request()->routeIs('university.treasury.reports.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Relatório Diário
+                            </x-dropdown-link>
+                            @endcan
+
+                        </x-slot>
+                    </x-dropdown>
+
+                    @endcan
+
+                    @can([
+                    'scholarships.types.view',
+                    'scholarships.students.view',
+                    ])
+
+                    <x-dropdown align="left" width="72">
+
+                        <x-slot name="trigger">
+                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-600 bg-white hover:text-gray-900 transition">
+                                <i class="fas fa-cash-register me-2 text-orange-600"></i>
+                                Bolsas de Estudo
+                                <i class="fas fa-chevron-down ms-2 text-xs"></i>
+                            </button>
+                        </x-slot>
+
+                        <x-slot name="content">
+                            @can('scholarships.types.view')
+                            <x-dropdown-link :href="route('university.scholarship-types.index')" :active="request()->routeIs('university.scholarship-types.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Tipos de bolsas
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('scholarships.types.view')
+                            <x-dropdown-link :href="route('university.student-scholarships.index')" :active="request()->routeIs('university.student-scholarships.*')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Bolsas dos estudantes
+                            </x-dropdown-link>
+                            @endcan
+
+                            @can('scholarships.reports.view')
+                            <x-dropdown-link :href="route('university.scholarships.reports')" :active="request()->routeIs('university.scholarships.reports')">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Relatórios de Bolsas
+                            </x-dropdown-link>
+                            @endcan
 
                         </x-slot>
                     </x-dropdown>
@@ -291,6 +481,13 @@
                                 <i class="fas fa-user-shield me-2"></i>
                                 Perfis e Permissões
                             </x-dropdown-link>
+
+                            @can('finance.audit.view')
+                            <x-dropdown-link :href="route('university.financial-audit.index')">
+                                <i class="fas fa-user-shield me-2"></i>
+                                Auditoria Financeira
+                            </x-dropdown-link>
+                            @endcan
 
                         </x-slot>
 

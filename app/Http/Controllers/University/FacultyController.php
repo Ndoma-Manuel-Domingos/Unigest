@@ -15,8 +15,8 @@ class FacultyController extends Controller
             ->withCount('departments')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('acronym', 'LIKE', "%{$search}%");
+                    $q->where('name', 'ILIKE', "%{$search}%")
+                        ->orWhere('acronym', 'ILIKE', "%{$search}%");
                 });
             })
             ->when($request->status !== null && $request->status !== '', function ($query) use ($request) {

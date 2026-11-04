@@ -20,8 +20,8 @@ class AcademicClassController extends Controller
                 $search = $request->search;
 
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('code', 'LIKE', "%{$search}%");
+                    $q->where('name', 'ILIKE', "%{$search}%")
+                        ->orWhere('code', 'ILIKE', "%{$search}%");
                 });
             })
             ->when($request->filled('academic_year_id'), fn ($q) =>

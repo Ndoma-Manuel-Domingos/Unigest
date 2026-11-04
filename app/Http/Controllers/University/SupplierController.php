@@ -16,11 +16,11 @@ class SupplierController extends Controller
                 $search = trim($request->search);
 
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('code', 'LIKE', "%{$search}%")
-                        ->orWhere('tax_number', 'LIKE', "%{$search}%")
-                        ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                    $q->where('name', 'ILIKE', "%{$search}%")
+                        ->orWhere('code', 'ILIKE', "%{$search}%")
+                        ->orWhere('tax_number', 'ILIKE', "%{$search}%")
+                        ->orWhere('email', 'ILIKE', "%{$search}%")
+                        ->orWhere('phone', 'ILIKE', "%{$search}%");
                 });
             })
             ->when($request->filled('status'), function ($query) use ($request) {

@@ -16,7 +16,7 @@ class AcademicYearController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->search;
 
-                $query->where('name', 'LIKE', "%{$search}%");
+                $query->where('name', 'ILIKE', "%{$search}%");
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('is_active', $request->status === 'active');

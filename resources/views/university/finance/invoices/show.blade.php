@@ -69,7 +69,7 @@
                         </div>
 
                         <p class="mt-2 text-sm text-gray-500">
-                            Emitida em {{ $invoice->issue_date?->format('d/m/Y') ?? '—' }}
+                            Emitida em {{ $invoice->created_at?->format('d/m/Y') ?? '—' }}
                             <span class="mx-2">•</span>
                             Vencimento {{ $invoice->due_date?->format('d/m/Y') ?? '—' }}
                         </p>
@@ -89,6 +89,12 @@
                             Pagamentos
                         </a>
                         @endcan
+
+                        {{-- @if($payment->status === 'confirmed')
+                        <a href="{{ route('university.treasury.receipts.show', $payment) }}" target="_blank" class="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700">
+                        Recibo
+                        </a>
+                        @endif --}}
 
                         @if($invoice->status === 'draft')
                         @can('finance.invoices.issue')
@@ -274,6 +280,97 @@
                         </p>
                     </div>
                 </div>
+
+
+                @if($invoice->studentScholarship)
+                <div class="mt-6 rounded-lg border border-green-200 bg-green-50 p-5">
+                    <div class="flex items-start justify-between gap-4">
+
+                        <div>
+                            <h3 class="font-semibold text-green-800">
+                                Bolsa aplicada
+                            </h3>
+
+                            <p class="mt-1 text-sm text-green-700">
+                                {{ $invoice->studentScholarship->scholarshipType->name }}
+                            </p>
+
+                            <p class="mt-2 text-sm text-green-700">
+                                Desconto:
+                                <strong>
+                                    {{ number_format($invoice->discount, 2, ',', '.') }}
+                                    AOA
+                                </strong>
+                            </p>
+                        </div>
+
+                        @if($invoice->status === 'draft')
+                        <form method="POST" action="{{ route('university.invoices.remove-scholarship', $invoice) }}" onsubmit="return confirm('Deseja remover a bolsa desta factura?')">
+                            @csrf
+                            @method('DELETE')
+
+                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">
+                                Remover
+                            </button>
+                        </form>
+                        @endif
+
+                    </div>
+                </div>
+                @endif
+
+
+                @if($invoice->status === 'draft')
+                @php
+                $availableScholarships = \App\Models\StudentScholarship::with('scholarshipType')
+                ->where('student_id', $invoice->student_id)
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                $query->whereNull('start_date')
+                ->orWhereDate('start_date', '<=', now()); }) ->where(function ($query) {
+                    $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', now());
+                    })
+                    ->get();
+                    @endphp
+
+                    @if($availableScholarships->count())
+                    <div class="mt-6 rounded-lg bg-white p-6 shadow">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            Bolsa de estudo
+                        </h3>
+
+                        <p class="mt-1 text-sm text-gray-500">
+                            Seleccione uma bolsa aprovada para aplicar o desconto.
+                        </p>
+
+                        <form method="POST" action="{{ route('university.invoices.apply-scholarship', $invoice) }}" class="mt-4 flex flex-col gap-3 md:flex-row">
+                            @csrf
+                            <select name="student_scholarship_id" class="flex-1 rounded-md border-gray-300" required>
+                                <option value="">
+                                    Seleccione uma bolsa
+                                </option>
+                                @foreach($availableScholarships as $scholarship)
+                                <option value="{{ $scholarship->id }}">
+                                    {{ $scholarship->scholarshipType->name }}
+                                    —
+                                    @if($scholarship->scholarshipType->type === 'percentage')
+                                    {{ number_format($scholarship->scholarshipType->value, 2, ',', '.') }}%
+                                    @else
+                                    {{ number_format($scholarship->approved_value ?? $scholarship->scholarshipType->value, 2, ',', '.') }}
+                                    AOA
+                                    @endif
+                                </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">
+                                Aplicar bolsa
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                    @endif
+
             </div>
         </div>
     </div>

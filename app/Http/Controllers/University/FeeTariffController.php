@@ -34,9 +34,9 @@ class FeeTariffController extends Controller
 
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('feeConcept', function ($sub) use ($search) {
-                        $sub->where('name', 'LIKE', "%{$search}%");
+                        $sub->where('name', 'ILIKE', "%{$search}%");
                     })->orWhereHas('course', function ($sub) use ($search) {
-                        $sub->where('name', 'LIKE', "%{$search}%");
+                        $sub->where('name', 'ILIKE', "%{$search}%");
                     });
                 });
             })

@@ -11,9 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Services\Finance\FinancialAuditService;
 
 class ExpensePaymentController extends Controller
-{
+{   
     public function create(string $expense)
     {
         $expense = Expense::findOrFail($expense); 
@@ -31,7 +32,7 @@ class ExpensePaymentController extends Controller
         return view('university.finance.expenses.payments.create', compact('expense'));
     }
 
-    public function store(Request $request, string $expense)
+    public function store(Request $request, string $expense, FinancialAuditService $audit)
     {
         $expense = Expense::findOrFail($expense);
 
@@ -53,7 +54,7 @@ class ExpensePaymentController extends Controller
             'observations' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        DB::transaction(function () use ($validated, $expense) {
+        DB::transaction(function () use ($validated, $expense, $audit) {
             $expense = Expense::whereKey($expense->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -148,6 +149,22 @@ class ExpensePaymentController extends Controller
             $expense->paid_at = $newBalance <= 0 ? now() : null;
             $expense->payment_method = $validated['payment_method'];
             $expense->save();
+
+            $audit->record(
+                module: 'expenses',
+                event: 'expense_payment.created',
+                description: 'Foi registado um pagamento de despesa.',
+                record: $expense,
+                newValues: [
+                    'expense_id' => $expense->expense_id,
+                    'amount' => $expense->amount,
+                    'currency' => $expense->currency,
+                    'payment_method' => $expense->payment_method,
+                    'status' => $expense->status,
+                ]
+            );
+
+
         });
 
         return redirect()

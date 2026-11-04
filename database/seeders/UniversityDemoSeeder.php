@@ -6,6 +6,7 @@ use App\Models\AcademicClass;
 use App\Models\AcademicYear;
 use App\Models\AssessmentGrade;
 use App\Models\AttendanceRecord;
+use App\Models\BankAccount;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\Curriculum;
@@ -13,6 +14,7 @@ use App\Models\CurriculumSubject;
 use App\Models\Department;
 use App\Models\Enrollment;
 use App\Models\Faculty;
+use App\Models\FeeConcept;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\SubjectAssessment;
@@ -23,6 +25,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Str;
 
 use App\Tenancy\TenantContext;
 
@@ -42,6 +45,7 @@ class UniversityDemoSeeder extends Seeder
                     'tax_number' => '999999999',
                 ],
                 [
+                    'uuid' => (string) Str::uuid(),
                     'name' => 'Universidade de Demonstração de Luanda',
                     'short_name' => 'UDL',
                     'slug' => 'universidade-demonstracao-luanda',
@@ -607,6 +611,119 @@ class UniversityDemoSeeder extends Seeder
                     ]
                 );
             }
+
+            /*
+            BANCOS
+            */
+
+            $accounts = [
+                [
+                    'tenant_id' => $university->id,
+                    'name' => 'Conta Principal BFA',
+                    'bank_name' => 'Banco de Fomento Angola',
+                    'account_number' => '000000000001',
+                    'iban' => 'AO06000000000000000000001',
+                    'swift' => 'BFAAAOLU',
+                    'currency' => 'AOA',
+                    'opening_balance' => 5000000,
+                    'current_balance' => 5000000,
+                    'is_active' => true,
+                    'is_default' => true,
+                    'branch' => 'Talatona',
+                    'notes' => 'Conta principal para operações financeiras.',
+                ],
+                [
+                    'tenant_id' => $university->id,
+                    'name' => 'Conta Operacional BAI',
+                    'bank_name' => 'Banco Angolano de Investimentos',
+                    'account_number' => '000000000002',
+                    'iban' => 'AO06000000000000000000002',
+                    'swift' => 'BAIPAOLU',
+                    'currency' => 'AOA',
+                    'opening_balance' => 2500000,
+                    'current_balance' => 2500000,
+                    'is_active' => true,
+                    'is_default' => false,
+                    'branch' => 'Maianga',
+                    'notes' => 'Conta para operações correntes.',
+                ],
+                [
+                    'tenant_id' => $university->id,
+                    'name' => 'Conta de Reserva BIC',
+                    'bank_name' => 'Banco BIC',
+                    'account_number' => '000000000003',
+                    'iban' => 'AO06000000000000000000003',
+                    'swift' => 'BICAAOLU',
+                    'currency' => 'AOA',
+                    'opening_balance' => 1000000,
+                    'current_balance' => 1000000,
+                    'is_active' => true,
+                    'is_default' => false,
+                    'branch' => 'Viana',
+                    'notes' => 'Conta destinada a reservas financeiras.',
+                ],
+            ];
+
+            foreach ($accounts as $account) {
+                BankAccount::updateOrCreate(
+                    [
+                        'tenant_id' => $account['tenant_id'],
+                        'name' => $account['name'],
+                    ],
+                    $account
+                );
+            }
+
+
+            $concepts = [
+                ['MAT', 'Taxa de matrícula', false],
+                ['REN', 'Taxa de renovação de matrícula', false],
+                ['PRO', 'Propina mensal', true],
+                ['INS', 'Taxa de inscrição', false],
+                ['CAN', 'Candidatura ao curso', false],
+                ['EXA', 'Exame de admissão', false],
+                ['CAR', 'Emissão de cartão de estudante', false],
+                ['DEC', 'Declaração de frequência', false],
+                ['CER', 'Certificado de habilitações', false],
+                ['DIP', 'Emissão de diploma', false],
+                ['HIS', 'Histórico académico', false],
+                ['TRA', 'Transferência de curso', false],
+                ['MUD', 'Mudança de turno', false],
+                ['REC', 'Exame de recurso', false],
+                ['EPO', 'Exame de época especial', false],
+                ['SEG', 'Seguro escolar', true],
+                ['BIB', 'Serviços de biblioteca', true],
+                ['LAB', 'Taxa de laboratório', true],
+                ['EST', 'Estágio curricular', false],
+                ['DEF', 'Defesa de monografia', false],
+                ['MON', 'Orientação de monografia', false],
+                ['ATR', 'Multa por atraso de pagamento', false],
+                ['SEG2', 'Segunda via de documentos', false],
+                ['FIC', 'Ficha de inscrição', false],
+                ['ALO', 'Alojamento universitário', true],
+                ['TRA2', 'Transporte universitário', true],
+                ['ALI', 'Alimentação universitária', true],
+                ['DES', 'Actividades desportivas', true],
+                ['EXT', 'Cursos extracurriculares', false],
+                ['FOR', 'Formação complementar', false],
+            ];
+
+            foreach ($concepts as [$code, $name, $recurring]) {
+                FeeConcept::updateOrCreate(
+                    [
+                        'tenant_id' => $university->id,
+                        'code' => $code,
+                    ],
+                    [
+                        'name' => $name,
+                        'description' => $name,
+                        'is_recurring' => $recurring,
+                        'is_active' => true,
+                    ]
+                );
+            }
+
+
 
             /*
             |--------------------------------------------------------------------------

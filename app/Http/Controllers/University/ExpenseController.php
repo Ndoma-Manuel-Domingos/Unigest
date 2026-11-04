@@ -9,9 +9,14 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Services\Finance\FinancialAuditService;
 
 class ExpenseController extends Controller
 {
+    public function __construct(
+        protected FinancialAuditService $audit
+    ) {}
+
     public function index(Request $request)
     {
         $expenses = Expense::query()
@@ -20,9 +25,9 @@ class ExpenseController extends Controller
                 $search = trim($request->search);
 
                 $query->where(function ($q) use ($search) {
-                    $q->where('expense_number', 'LIKE', "%{$search}%")
-                        ->orWhere('description', 'LIKE', "%{$search}%")
-                        ->orWhere('reference', 'LIKE', "%{$search}%");
+                    $q->where('expense_number', 'ILIKE', "%{$search}%")
+                        ->orWhere('description', 'ILIKE', "%{$search}%")
+                        ->orWhere('reference', 'ILIKE', "%{$search}%");
                 });
             })
             ->when($request->filled('status'), function ($query) use ($request) {
@@ -108,7 +113,7 @@ class ExpenseController extends Controller
             $prefix = "DES-{$year}-";
 
             $lastExpense = Expense::query()
-                ->where('expense_number', 'LIKE', "{$prefix}%")
+                ->where('expense_number', 'ILIKE', "{$prefix}%")
                 ->orderByDesc('id')
                 ->lockForUpdate()
                 ->first();
@@ -126,7 +131,7 @@ class ExpenseController extends Controller
                 STR_PAD_LEFT
             );
 
-            return Expense::create([
+            $expense = Expense::create([
                 ...$validated,
                 'expense_number' => $expenseNumber,
                 'created_by' => auth()->id(),
@@ -136,6 +141,25 @@ class ExpenseController extends Controller
                 'status' => 'draft',
                 'currency' => strtoupper($validated['currency']),
             ]);
+
+            $this->audit->record(
+                module: 'expenses',
+                event: 'expense.created',
+                description: "Despesa {$expense->expense_number} criada.",
+                record: $expense,
+                newValues: [
+                    'expense_number' => $expense->expense_number,
+                    'category_id' => $expense->category_id,
+                    'supplier_id' => $expense->supplier_id,
+                    'amount' => $expense->amount,
+                    'currency' => $expense->currency,
+                    'status' => $expense->status,
+                ]
+            );
+
+
+            return $expense;
+
         });
 
         return redirect()
@@ -228,14 +252,33 @@ class ExpenseController extends Controller
     {
         $expense = Expense::findOrFail($expense); 
 
-        abort_unless($expense->canBeApproved(), 422,
-            'Esta despesa não pode ser aprovada no estado actual.');
+        abort_unless($expense->canBeApproved(), 422, 'Esta despesa não pode ser aprovada no estado actual.');
+
+        $oldValues = [
+            'status' => $expense->status,
+            'approved_by' => $expense->approved_by,
+            'approved_at' => $expense->approved_at,
+        ];
 
         $expense->update([
             'status' => 'approved',
             'approved_by' => auth()->id(),
             'approved_at' => now(),
         ]);
+
+        $this->audit->record(
+            module: 'expenses',
+            event: 'expense.approved',
+            description: "Despesa {$expense->expense_number} aprovada.",
+            record: $expense,
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $expense->status,
+                'approved_by' => $expense->approved_by,
+                'approved_at' => $expense->approved_at,
+            ]
+        );
+
 
         return back()->with('success', 'Despesa aprovada com sucesso.');
     }
@@ -245,12 +288,32 @@ class ExpenseController extends Controller
 
         $expense = Expense::findOrFail($expense); 
 
-        abort_unless($expense->canBeCancelled(), 422,
-            'Esta despesa não pode ser cancelada. Verifica o estado e os pagamentos.');
+        abort_unless($expense->canBeCancelled(), 422, 'Esta despesa não pode ser cancelada. Verifica o estado e os pagamentos.');
+
+        $oldValues = [
+            'status' => $expense->status,
+            'amount' => $expense->amount,
+            'paid_amount' => $expense->paid_amount,
+            'balance' => $expense->balance,
+        ];
 
         $expense->update([
             'status' => 'cancelled',
         ]);
+
+        $this->audit->record(
+            module: 'expenses',
+            event: 'expense.cancelled',
+            description: "Despesa {$expense->expense_number} cancelada.",
+            record: $expense,
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $expense->status,
+                'amount' => $expense->amount,
+                'paid_amount' => $expense->paid_amount,
+                'balance' => $expense->balance,
+            ]
+        );
 
         return back()->with('success', 'Despesa cancelada com sucesso.');
     }

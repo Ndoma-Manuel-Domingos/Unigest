@@ -17,9 +17,9 @@ class RoomController extends Controller
                     $query->where(function ($q) use ($request) {
                         $search = $request->search;
 
-                        $q->where('name', 'LIKE', "%{$search}%")
-                            ->orWhere('code', 'LIKE', "%{$search}%")
-                            ->orWhere('building', 'LIKE', "%{$search}%");
+                        $q->where('name', 'ILIKE', "%{$search}%")
+                            ->orWhere('code', 'ILIKE', "%{$search}%")
+                            ->orWhere('building', 'ILIKE', "%{$search}%");
                     })
             )
             ->when(

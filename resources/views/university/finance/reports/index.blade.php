@@ -26,6 +26,8 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
 
+
+
             {{-- FILTROS --}}
             <div class="rounded-lg bg-white p-6 shadow">
                 <form method="GET" action="{{ route('university.financial-reports.index') }}" class="grid grid-cols-1 items-end gap-4 md:grid-cols-3">
@@ -61,6 +63,15 @@
                     até
                     {{ $dateTo->format('d/m/Y') }}
                 </p>
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-3 border-t border-gray-100 pt-5">
+                <a href="{{ route('university.financial-reports.excel', ['date_from' => $dateFrom->format('Y-m-d'),'date_to' => $dateTo->format('Y-m-d'),]) }}" class="inline-flex items-center rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800">
+                    Exportar Excel
+                </a>
+                <a href="{{ route('university.financial-reports.pdf', ['date_from' => $dateFrom->format('Y-m-d'),'date_to' => $dateTo->format('Y-m-d'),]) }}" class="inline-flex items-center rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
+                    Exportar PDF
+                </a>
             </div>
 
             {{-- RESUMO FINANCEIRO --}}

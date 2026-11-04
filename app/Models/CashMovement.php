@@ -48,4 +48,45 @@ class CashMovement extends Model
     {
         return $this->belongsTo(Payment::class, 'reference_payment_id');
     }
+
+    protected static function booted(): void
+    {
+        static::updating(function (CashMovement $movement) {
+            $protectedFields = [
+                'cash_register_id',
+                'payment_id',
+                'reference_payment_id',
+                'type',
+                'source',
+                'description',
+                'amount',
+                'movement_date',
+            ];
+
+            $changed = collect($protectedFields)
+                ->contains(fn ($field) => $movement->isDirty($field));
+
+            $isProtected = in_array(
+                $movement->source,
+                ['payment', 'payment_reversal'],
+                true
+            );
+
+            if ($changed && $isProtected) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'movement' => 'Este movimento de caixa foi gerado por um pagamento e não pode ser alterado manualmente.',
+                ]);
+            }
+        });
+
+        static::deleting(function (CashMovement $movement) {
+            if (in_array($movement->source, ['payment', 'payment_reversal'], true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'movement' => 'Este movimento de caixa não pode ser eliminado manualmente.',
+                ]);
+            }
+        });
+    }
+
+
 }

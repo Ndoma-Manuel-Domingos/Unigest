@@ -137,6 +137,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'finance.invoices.create',
             'finance.invoices.issue',
             'finance.invoices.cancel',
+            'finance.invoices.update',
+            
 
             'finance.payments.view',
             'finance.payments.create',
@@ -169,6 +171,75 @@ class RolesAndPermissionsSeeder extends Seeder
             'finance.expenses.cancel',
             'finance.expenses.payments.create',
             'finance.expenses.payments.view',
+
+
+            'scholarships.types.view',
+            'scholarships.types.create',
+            'scholarships.types.update',
+            'scholarships.types.delete',
+
+
+            'scholarships.students.view',
+            'scholarships.students.create',
+            'scholarships.students.approve',
+            'scholarships.students.reject',
+            'scholarships.students.suspend',
+
+            'scholarships.reports.view',
+
+            'finance.bank-accounts.view',
+            'finance.bank-accounts.create',
+            'finance.bank-accounts.update',
+            'finance.bank-accounts.delete',
+            'finance.bank-movements.view',
+            'finance.bank-movements.create',
+            'finance.bank-movements.update',
+            'finance.bank-movements.delete',
+            'finance.bank-reconciliations.view',
+            'finance.bank-reconciliations.create',
+            'finance.bank-reconciliations.match',
+            'finance.bank-reconciliations.reconcile',
+            'finance.bank-reports.view',
+
+            'finance.bank-integrations.view',
+            'finance.bank-integrations.create',
+            'finance.bank-integrations.update',
+
+            'finance.bank-transactions.view',
+            'finance.bank-transactions.confirm',
+
+
+            'finance.audit.view',
+            'finance.treasury.view',
+            'finance.treasury.movements.view',
+
+            'finance.treasury.closures.view',
+            'finance.treasury.closures.create',
+            'finance.treasury.reports.view',
+            'finance.treasury.position.view',
+            'finance.treasury.cash-flow.view',
+            'finance.treasury.operators.view',
+
+            'finance.treasury.transfers.view',
+            'finance.treasury.transfers.create',
+            'finance.treasury.transfers.receive',
+
+            'finance.treasury.cash-counts.view',
+            'finance.treasury.cash-counts.create',
+            'finance.treasury.cash-counts.approve',
+
+
+            'finance.petty-cash.funds.view',
+            'finance.petty-cash.funds.create',
+            'finance.petty-cash.funds.update',
+            'finance.petty-cash.movements.create',
+            'finance.petty-cash.movements.approve',
+            'finance.petty-cash.replenishments.view',
+            'finance.petty-cash.replenishments.create',
+            'finance.petty-cash.replenishments.approve',
+            'finance.petty-cash.replenishments.pay',
+            'finance.petty-cash.reports.view',
+
 
             // Relatórios
             'reports.view',

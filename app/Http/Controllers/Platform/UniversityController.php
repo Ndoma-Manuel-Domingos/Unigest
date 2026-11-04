@@ -38,10 +38,10 @@ class UniversityController extends Controller
 
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
-                        ->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('slug', 'LIKE', "%{$search}%")
-                        ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('tax_number', 'LIKE', "%{$search}%");
+                        ->where('name', 'ILIKE', "%{$search}%")
+                        ->orWhere('slug', 'ILIKE', "%{$search}%")
+                        ->orWhere('email', 'ILIKE', "%{$search}%")
+                        ->orWhere('tax_number', 'ILIKE', "%{$search}%");
                 });
             })
             ->when($request->filled('status'), function ($query) use ($request) {

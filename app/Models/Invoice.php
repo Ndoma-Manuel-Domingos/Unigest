@@ -161,4 +161,14 @@ class Invoice extends Model
     {
         return $query->where('status', 'paid');
     }
+
+    public function bankPaymentReferences()
+    {
+        return $this->hasMany(BankPaymentReference::class);
+    }
+
+    public function studentScholarship()
+    {
+        return $this->belongsTo(StudentScholarship::class);
+    }
 }

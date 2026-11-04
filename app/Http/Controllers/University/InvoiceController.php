@@ -13,9 +13,14 @@ use App\Models\University;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\StudentScholarship;
+use App\Services\ScholarshipDiscountService;
+use App\Services\Finance\FinancialAuditService;
 
 class InvoiceController extends Controller
 {
+    public function __construct(protected FinancialAuditService $audit) {}
+
     public function index(Request $request)
     {
         $invoices = Invoice::with(['student', 'enrollment'])
@@ -23,10 +28,10 @@ class InvoiceController extends Controller
                 $search = $request->search;
 
                 $query->where(function ($q) use ($search) {
-                    $q->where('invoice_number', 'LIKE', "%{$search}%")
+                    $q->where('invoice_number', 'ILIKE', "%{$search}%")
                         ->orWhereHas('student', function ($student) use ($search) {
-                            $student->where('name', 'LIKE', "%{$search}%")
-                                ->orWhere('student_number', 'LIKE', "%{$search}%");
+                            $student->where('name', 'ILIKE', "%{$search}%")
+                                ->orWhere('student_number', 'ILIKE', "%{$search}%");
                         });
                 });
             })
@@ -157,7 +162,7 @@ class InvoiceController extends Controller
             $year = now()->format('Y');
             $prefix = 'FAT-' . $year . '-';
 
-            $number = Invoice::where('invoice_number', 'LIKE', $prefix . '%')->count() + 1;
+            $number = Invoice::where('invoice_number', 'ILIKE', $prefix . '%')->count() + 1;
             $invoiceNumber = $prefix . str_pad($number, 6, '0', STR_PAD_LEFT);
 
             $invoice = Invoice::create([
@@ -233,6 +238,21 @@ class InvoiceController extends Controller
         $invoice->recalculateFinancials();
         $invoice->update(['status' => 'issued']);
 
+        $this->audit->record(
+            module: 'invoices',
+            event: 'invoice.issued',
+            description: "Factura {$invoice->invoice_number} emitida.",
+            record: $invoice,
+            oldValues: [
+                'status' => 'draft',
+            ],
+            newValues: [
+                'status' => $invoice->status,
+                'total' => $invoice->total,
+                'balance' => $invoice->balance,
+            ]
+        );
+
         return back()->with('success', 'Factura emitida com sucesso.');
     }
 
@@ -247,6 +267,108 @@ class InvoiceController extends Controller
 
         $invoice->update(['status' => 'cancelled']);
 
+        $oldValues = [
+            'status' => $invoice->status,
+            'total' => $invoice->total,
+            'amount_paid' => $invoice->amount_paid,
+            'balance' => $invoice->balance,
+        ];
+
+
+        $this->audit->record(
+            module: 'invoices',
+            event: 'invoice.cancelled',
+            description: "Factura {$invoice->invoice_number} cancelada.",
+            record: $invoice,
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $invoice->status,
+                'total' => $invoice->total,
+                'amount_paid' => $invoice->amount_paid,
+                'balance' => $invoice->balance,
+            ]
+        );
+
         return back()->with('success', 'Factura cancelada com sucesso.');
     }
+
+
+    public function applyScholarship(Request $request, string $invoice, ScholarshipDiscountService $scholarshipDiscountService) 
+    {
+        $invoice = Invoice::findOrFail($invoice); 
+        
+        $data = $request->validate([
+            'student_scholarship_id' => [
+                'required',
+                'integer',
+            ],
+        ]);
+
+        $scholarship = StudentScholarship::findOrFail(
+            $data['student_scholarship_id']
+        );
+      
+        $scholarshipDiscountService->apply(
+            $invoice,
+            $scholarship
+        );
+
+        $oldDiscount = $invoice->discount;
+        $oldTotal = $invoice->total;
+
+        $this->audit->record(
+            module: 'invoices',
+            event: 'invoice.scholarship_applied',
+            description: "Bolsa de estudo aplicada à factura {$invoice->invoice_number}.",
+            record: $invoice,
+            oldValues: [
+                'discount' => $oldDiscount,
+                'total' => $oldTotal,
+            ],
+            newValues: [
+                'discount' => $invoice->discount,
+                'total' => $invoice->total,
+                'student_scholarship_id' => $invoice->student_scholarship_id,
+            ]
+        );
+
+        return back()->with(
+            'success',
+            'Bolsa aplicada à factura com sucesso.'
+        );
+    }
+
+    public function removeScholarship( string $invoice, ScholarshipDiscountService $scholarshipDiscountService) 
+    {
+
+        $invoice = Invoice::findOrFail($invoice); 
+
+        $scholarshipDiscountService->remove($invoice);
+
+        $oldDiscount = $invoice->discount;
+        $oldTotal = $invoice->total;
+
+        $this->audit->record(
+            module: 'invoices',
+            event: 'invoice.scholarship_removed',
+            description: "Bolsa de estudo aplicada à factura {$invoice->invoice_number}.",
+            record: $invoice,
+            oldValues: [
+                'discount' => $oldDiscount,
+                'total' => $oldTotal,
+            ],
+            newValues: [
+                'discount' => $invoice->discount,
+                'total' => $invoice->total,
+                'student_scholarship_id' => $invoice->student_scholarship_id,
+            ]
+        );
+
+        return back()->with(
+            'success',
+            'Bolsa removida da factura com sucesso.'
+        );
+    }
+
+
 }
